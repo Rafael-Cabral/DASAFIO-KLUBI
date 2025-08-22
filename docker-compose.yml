@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: klubi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: klubi
+      POSTGRES_PASSWORD: klubi
+      POSTGRES_DB: klubi
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d
+      - ./sql:/docker-entrypoint-initdb.d/sql
+volumes:
+  pgdata:
+
+

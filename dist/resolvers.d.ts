@@ -1,6 +1,6 @@
 export declare const resolvers: {
     Query: {
-        pessoas(_: any, { q: search, first, after }: any): Promise<any>;
+        pessoa(_: any, { q: search, first, after }: any): Promise<any>;
         pessoaPorCpf(_: any, { cpf }: any): Promise<any>;
         planos(_: any, { first, after, min_valor, max_valor, parcelas }: any): Promise<any>;
         contratosPorPessoa(_: any, { pessoaId, status, first, after }: any): Promise<any>;
