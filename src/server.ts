@@ -1,11 +1,20 @@
 import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import depthLimit from 'graphql-depth-limit';
+import rateLimit from '@fastify/rate-limit';
 import { typeDefs } from './schema';
 import { resolvers } from './resolvers';
 import { createLoaders } from './loaders';
+import { redis } from './cache';
 
 const app = Fastify({ logger: true });
+
+app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+    redis,
+    allowList: (req: any) => String(req.url || '').startsWith('/graphiql')
+});
 
 app.register(mercurius, {
     schema: typeDefs,

@@ -8,7 +8,7 @@ API GraphQL em Node.js (Fastify + Mercurius) com Postgres. Inclui paginação po
 - Docker e Docker Compose
 - psql (opcional, para execução manual de SQL)
 
-## Banco de dados (Docker na 5433)
+## Banco de dados (Docker na 5433) e Redis
 
 Suba o Postgres com init automático de schema, índices e seed:
 
@@ -20,6 +20,7 @@ Credenciais padrão e URL:
 
 ```bash
 export DATABASE_URL='postgres://klubi:klubi@localhost:5433/klubi'
+export REDIS_URL='redis://localhost:6379'
 ```
 
 Verifique:
@@ -99,5 +100,13 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f sql/seed.sql
 - Erro "relation \"pessoas\" does not exist": aplique `sql/schema.sql` (Docker já faz isso no init).
 - Erro de `ON CONFLICT` em `cpf`: garanta índices únicos via `sql/indexes.sql`.
 - Conexão recusada: verifique `docker compose up -d`, porta `5433` livre e `DATABASE_URL` correto.
+
+## Por que estas técnicas e como trazem resiliência
+
+- Rate limit (no `src/server.ts`): limita 100 req/min por IP usando Redis. Evita abuso, protege o banco e o GraphQL contra picos e ataques, mantendo latência estável e prevenindo esgotamento de conexões.
+- Cache (em `src/cache.ts` e usado nos resolvers): armazena resultados de consultas quentes (ex.: listas e agregados) por janelas curtas. Reduz carga no Postgres, suaviza spikes e melhora tempo de resposta.
+- Paginação por cursor (em `src/pagination.ts`): usa keyset pagination por `id`, estável sob inserções e com custo previsível. Evita `OFFSET` custoso, reduzendo leituras e contendas no banco em listas grandes.
+
+Essas três camadas combinadas adicionam backpressure (rate limit), reduzem trabalho repetido (cache) e tornam navegação de listas eficiente e previsível (paginação), melhorando disponibilidade e experiência mesmo sob alta concorrência.
 
 
